@@ -22,7 +22,7 @@ async def post_item(request, body: ItemScheme):
 
 
 @items.get('/')
-@scoped('admin')
+@scoped('user')
 async def get_items(request):
     items = await item_list()
     return json(items.dict())

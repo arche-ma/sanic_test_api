@@ -23,9 +23,10 @@ async def authenticate(request):
     password = get_hashed_password(password)
     user = await User.get_or_none(username=username,
                                   password=password)
+    print(user.is_active)
     if user and user.is_active:
         return dict(user_id=user.id)
-    
+
     raise exceptions.AuthenticationFailed(
         'authentication credentials are incorrect')
 
@@ -41,8 +42,6 @@ async def retrieve_user(request, payload, *args, **kwargs):
 
 
 async def scopes(user, *args, **kwargs):
-    if user['is_admin']:
+    if user.is_admin:
         return ['user', 'admin']
-    else:
-        return ['user']
-
+    return ['user']

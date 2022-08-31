@@ -4,7 +4,7 @@ from uuid import uuid4
 from tortoise import fields, Model
 
 
-class Role(Enum):
+class Role(str, Enum):
     USER = 'USER'
     ADMIN = 'ADMIN'
 
@@ -20,6 +20,8 @@ class User(Model):
     def is_admin(self):
         return self.role == Role.ADMIN
 
+    class PydanticMeta:
+        pass
 
 class UserActivation(Model):
     id = fields.IntField(pk=True)

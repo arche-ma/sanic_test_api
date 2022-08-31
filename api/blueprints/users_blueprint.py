@@ -30,22 +30,24 @@ async def register_handler(request, body: UserScheme):
 @users.get('/me')
 @inject_user()
 async def current_user(request, user):
+    print(user)
     user_id = user.get('user_id')
     response = await get_user_by_id(user_id)
-    return json(response.json(), status=200)
+    return json(response.dict(), status=200)
 
 
-@users.get('/') 
-@scoped('admin')
-async def all_users(request):
+@users.get('/')
+@scoped('user')
+async def all_users(request, user):
     response = await users_list()
     return json(response.dict(), status=200)
 
 
 @users.get('/me/accounts')
-@scoped(['user', 'admin'])
+@scoped(['user'])
 @inject_user()
 async def my_accounts_handler(request, user):
+    print(user)
     user_id = user.get('user_id')
     response = await get_users_account(user_id)
     return json(response.dict(), status=200)

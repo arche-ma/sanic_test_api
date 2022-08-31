@@ -68,7 +68,7 @@ async def get_user_by_uuid(uuid):
 async def get_user_by_id(id: int):
     user = await User.get_or_none(pk=id)
     if user:
-        return await user_output.from_tortoise_orm(User)
+        return await user_output.from_tortoise_orm(user)
     raise exceptions.SanicException('user not found',
                                     status_code=404)
 
