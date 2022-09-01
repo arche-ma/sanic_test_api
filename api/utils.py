@@ -1,9 +1,13 @@
 
 from sanic import Sanic
+from sanic.exceptions import SanicException
 from sanic_jwt import exceptions
+from sanic_jwt.decorators import inject_user
 import hashlib
 
 from models import User
+from functools import wraps
+
 
 
 def get_hashed_password(password: str) -> str:
@@ -23,25 +27,38 @@ async def authenticate(request):
     password = get_hashed_password(password)
     user = await User.get_or_none(username=username,
                                   password=password)
-    print(user.is_active)
-    if user and user.is_active:
-        return dict(user_id=user.id)
-
-    raise exceptions.AuthenticationFailed(
-        'authentication credentials are incorrect')
+    if not user:
+        raise SanicException('User not found', 404)
+    if not user.is_active:
+        raise SanicException('activate your account first', 403)
+    return dict(user_id=user.id, is_admin=user.is_admin)
 
 
 async def retrieve_user(request, payload, *args, **kwargs):
     if payload:
         user_id = payload.get('user_id', None)
         user = await User.get(pk=user_id)
-        return {'user_id': user.pk,
+        return {'user_id': user.id,
                 'is_admin': user.is_admin}
     else:
         return None
 
 
 async def scopes(user, *args, **kwargs):
-    if user.is_admin:
+    if user['is_admin']:
         return ['user', 'admin']
     return ['user']
+
+
+def is_active():
+    def decorator(f):
+        @wraps(f)
+        @inject_user()
+        async def decorated_function(request, user, *args, **kwargs):
+            current_user = await User.get(pk=user['user_id'])
+            if not current_user.is_active:
+                raise exceptions.AuthenticationFailed('user is not activated')
+            response = await f(request, user, *args, **kwargs)
+            return response       
+        return decorated_function
+    return decorator

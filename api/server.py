@@ -21,7 +21,7 @@ register_tortoise(
 
 Initialize(app, authenticate=authenticate,
            retrieve_user=retrieve_user,
-           scopes=scopes)
+           add_scopes_to_payload=scopes)
 
 if __name__ == '__main__':
     app.run(host='localhost', port=8000, debug=True)

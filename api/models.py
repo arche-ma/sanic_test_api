@@ -21,7 +21,8 @@ class User(Model):
         return self.role == Role.ADMIN
 
     class PydanticMeta:
-        pass
+        exclude = ['password']
+
 
 class UserActivation(Model):
     id = fields.IntField(pk=True)
