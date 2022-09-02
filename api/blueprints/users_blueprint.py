@@ -37,6 +37,7 @@ async def current_user(request, user):
 
 
 @users.get('/')
+@is_active(add_user=False)
 @scoped('admin')
 async def all_users(request):
     response = await users_list()
@@ -44,6 +45,7 @@ async def all_users(request):
 
 
 @users.get('/<id:int>')
+@is_active(add_user=False)
 @scoped('admin')
 async def get_user_handled(request, id):
     user = await get_user_by_id(id)
@@ -60,6 +62,7 @@ async def my_accounts_handler(request, user):
 
 
 @users.get('<user_id:int>/accounts')
+@is_active(add_user=False)
 @scoped('admin')
 async def my_account_by_id_handler(request, user_id):
     accounts = await get_users_account(user_id=user_id)
@@ -67,13 +70,15 @@ async def my_account_by_id_handler(request, user_id):
 
 
 @users.post('<user_id:int>/deactivate')
+@is_active()
 @scoped('admin')
-async def deactivate_user_handler(request, user_id: int):
+async def deactivate_user_handler(request, user, user_id: int):
     await set_user_state(user_id, False)
     return json(f'user {user_id} was deactivated', status=200)
 
 
 @users.post('<user_id:int>/activate')
+@is_active(add_user=False)
 @scoped('admin')
 async def activate_user_handler(request, user_id: int):
     await set_user_state(user_id, True)

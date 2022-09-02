@@ -54,7 +54,8 @@ class Account(Model):
 
 class Transaction(Model):
     id = fields.IntField(pk=True)
-    datetime = fields.DatetimeField(auto_snow=True)
+    transaction_id = fields.IntField()
+    datetime = fields.DatetimeField(auto_now=True)
     amount = fields.DecimalField(max_digits=10,
                                  decimal_places=2)
     account = fields.ForeignKeyField('models.Account',

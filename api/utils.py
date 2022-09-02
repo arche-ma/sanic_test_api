@@ -4,10 +4,10 @@ from sanic.exceptions import SanicException
 from sanic_jwt import exceptions
 from sanic_jwt.decorators import inject_user
 import hashlib
+from Crypto.Hash import SHA1
 
 from models import User
 from functools import wraps
-
 
 
 def get_hashed_password(password: str) -> str:
@@ -15,6 +15,14 @@ def get_hashed_password(password: str) -> str:
     salt_password = password + app.config.SECRET
     hashed_password = hashlib.md5(salt_password.encode())
     return hashed_password.hexdigest()
+
+
+def produce_signature(private_key, transaction_id, user_id, bill_id, amount):
+    signature = SHA1.new()
+    signature.update(
+        f'{private_key}:{transaction_id}:{user_id}:{bill_id}:{amount}'.encode()
+    )
+    return signature.hexdigest()
 
 
 async def authenticate(request):
@@ -31,15 +39,19 @@ async def authenticate(request):
         raise SanicException('User not found', 404)
     if not user.is_active:
         raise SanicException('activate your account first', 403)
-    return dict(user_id=user.id, is_admin=user.is_admin)
+    return dict(user_id=user.id, is_admin=user.is_admin, is_active=user.is_active)
 
 
+#set payload
 async def retrieve_user(request, payload, *args, **kwargs):
     if payload:
         user_id = payload.get('user_id', None)
-        user = await User.get(pk=user_id)
-        return {'user_id': user.id,
-                'is_admin': user.is_admin}
+        user = await User.get(id=user_id)
+        is_admin = user.is_admin
+        is_active = user.is_active
+        return {'user_id': user_id,
+                'is_admin': is_admin,
+                'is_active': is_active}
     else:
         return None
 
@@ -50,15 +62,19 @@ async def scopes(user, *args, **kwargs):
     return ['user']
 
 
-def is_active():
+def is_active(add_user=True):
     def decorator(f):
         @wraps(f)
         @inject_user()
         async def decorated_function(request, user, *args, **kwargs):
-            current_user = await User.get(pk=user['user_id'])
-            if not current_user.is_active:
-                raise exceptions.AuthenticationFailed('user is not activated')
-            response = await f(request, user, *args, **kwargs)
-            return response       
+            is_active = user.get('is_active', None)
+            if not is_active:
+                raise SanicException('user is not activated', 403)
+            if add_user:
+                response = await f(request, user, *args, **kwargs)
+            else:
+                response = await f(request, *args, **kwargs)
+            return response
         return decorated_function
     return decorator
+
