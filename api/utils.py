@@ -1,18 +1,18 @@
 
+import hashlib
+from functools import wraps
+
+from Crypto.Hash import SHA1
 from sanic import Sanic
 from sanic.exceptions import SanicException
 from sanic_jwt import exceptions
 from sanic_jwt.decorators import inject_user
-import hashlib
-from Crypto.Hash import SHA1
 
 from models import User
-from functools import wraps
 
 
-def get_hashed_password(password: str) -> str:
-    app = Sanic.get_app('helloWorld')
-    salt_password = password + app.config.SECRET
+def get_hashed_password(password: str, secret: None) -> str:
+    salt_password = password + secret
     hashed_password = hashlib.md5(salt_password.encode())
     return hashed_password.hexdigest()
 
@@ -26,23 +26,23 @@ def produce_signature(private_key, transaction_id, user_id, bill_id, amount):
 
 
 async def authenticate(request):
+    secret = Sanic.get_app('helloWorld').config.SECRET
     password = request.json.get('password')
     username = request.json.get('username')
     if not (password and username):
         raise exceptions.AuthenticationFailed(
             'authentication credentials were not provided'
         )
-    password = get_hashed_password(password)
+    password = get_hashed_password(password, secret)
     user = await User.get_or_none(username=username,
                                   password=password)
     if not user:
         raise SanicException('User not found', 404)
     if not user.is_active:
         raise SanicException('activate your account first', 403)
-    return dict(user_id=user.id, is_admin=user.is_admin, is_active=user.is_active)
+    return dict(user_id=user.id, is_admin=user.is_admin)
 
 
-#set payload
 async def retrieve_user(request, payload, *args, **kwargs):
     if payload:
         user_id = payload.get('user_id', None)
@@ -57,7 +57,7 @@ async def retrieve_user(request, payload, *args, **kwargs):
 
 
 async def scopes(user, *args, **kwargs):
-    if user['is_admin']:
+    if user.get('is_admin', None):
         return ['user', 'admin']
     return ['user']
 
@@ -67,6 +67,8 @@ def is_active(add_user=True):
         @wraps(f)
         @inject_user()
         async def decorated_function(request, user, *args, **kwargs):
+            if not user:
+                raise SanicException('authentication token expired', 403)
             is_active = user.get('is_active', None)
             if not is_active:
                 raise SanicException('user is not activated', 403)

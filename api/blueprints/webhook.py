@@ -1,9 +1,11 @@
 from sanic import Blueprint, json
 from sanic.exceptions import SanicException
 from sanic_ext import validate
-from validators import WebhookScheme
-from models import User, Account, Transaction
 from tortoise.transactions import atomic
+
+from models import Account, Transaction, User
+from ..validators import WebhookScheme
+
 webhook = Blueprint('webhook', url_prefix='/webhook')
 
 
@@ -29,7 +31,8 @@ async def webhook_handler(request, body):
         raise SanicException('transaction already exists', status_code=400)
     account = await Account.get_or_none(pk=body.bill_id)
     if not account:
-        account = await Account.create(user=user,
+        account = await Account.create(id=body.bill_id,
+                                        user=user,
                                        balance=body.amount)
         await Transaction.create(amount=body.amount,
                                  account=account,

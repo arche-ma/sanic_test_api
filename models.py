@@ -1,7 +1,7 @@
-
 from enum import Enum
 from uuid import uuid4
-from tortoise import fields, Model
+
+from tortoise import Model, fields
 
 
 class Role(str, Enum):
@@ -41,7 +41,7 @@ class Item(Model):
 
 
 class Account(Model):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(pk=True, generated=False)
     balance = fields.DecimalField(max_digits=10,
                                   decimal_places=2)
     user = fields.ForeignKeyField('models.User',
@@ -59,4 +59,6 @@ class Transaction(Model):
     amount = fields.DecimalField(max_digits=10,
                                  decimal_places=2)
     account = fields.ForeignKeyField('models.Account',
-                                     related_name='transactions')
+                                     related_name='transactions' )
+
+    

@@ -1,10 +1,12 @@
 import re
-from pydantic import BaseModel, validator, root_validator
 from decimal import Decimal
-from sanic.exceptions import SanicException
 from typing import Optional
-from utils import produce_signature
+
+from pydantic import BaseModel, root_validator, validator
 from sanic import Sanic
+from sanic.exceptions import SanicException
+
+from .utils import produce_signature
 
 
 class UserScheme(BaseModel):
@@ -73,8 +75,10 @@ class WebhookScheme(BaseModel):
 
     @root_validator
     def validate_signature(cls, values):
-        validation_data = {key: value for (key, value) in values.items() if key != 'signature'}
-        if values['signature'] != (sign := cls.computed_signature(**validation_data)):
+        validation_data = {
+            key: value for (key, value) in values.items() if key != 'signature'
+        }
+        if values['signature'] != (sign := cls.computed_signature(
+                                   **validation_data)):
             raise SanicException(f"signature is false: {sign}, {values}", 400)
-        print(values)
         return values

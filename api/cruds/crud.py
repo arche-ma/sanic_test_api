@@ -1,18 +1,18 @@
-from sanic import exceptions
+from sanic import exceptions, Sanic
+from tortoise import Tortoise
 from tortoise.contrib.pydantic import (pydantic_model_creator,
                                        pydantic_queryset_creator)
 
-
-from models import Item, User, UserActivation, Account
-from utils import get_hashed_password
-from validators import ItemScheme, UserScheme
-
+from models import Account, Item, Transaction, User, UserActivation
+from ..utils import get_hashed_password
+from ..validators import ItemScheme, UserScheme
 
 ItemOutput = pydantic_model_creator(Item)
 ItemListOutput = pydantic_queryset_creator(Item)
 UserOutput = pydantic_model_creator(User)
 UserListOutput = pydantic_queryset_creator(User)
 AccountListOutput = pydantic_queryset_creator(Account)
+TransactionsList = pydantic_queryset_creator(Transaction)
 
 
 async def create_item(ItemScheme: ItemScheme):
@@ -53,8 +53,11 @@ async def update_item(id, item: ItemScheme):
 
 async def create_user(user: UserScheme):
     if await User.get_or_none(username=user.username):
-        raise ValueError('user with this username already exists')
-    hashed_password = get_hashed_password(user.password)
+        raise exceptions.SanicException(
+            'user with this username already exists', 400)
+    app = Sanic.get_app('helloWorld')
+    secret = app.config.SECRET
+    hashed_password = get_hashed_password(user.password, secret)
     created_user = await User.create(
         username=user.username,
         password=hashed_password
@@ -87,7 +90,9 @@ async def users_list():
 
 
 async def get_users_account(user_id: int):
-    user = await User.get(pk=user_id).prefetch_related('accounts')
+    user = await User.get_or_none(pk=user_id).prefetch_related('accounts')
+    if not user:
+        raise exceptions.SanicException('User doesn\'t exist', 404)
     accounts = user.accounts
     return await AccountListOutput.from_queryset(accounts.all())
 
@@ -98,5 +103,19 @@ async def set_user_state(user_id, is_active: bool):
         user.is_active = is_active
         await user.save()
     else:
-        exceptions.SanicException('User not found', status_code=404)
+        raise exceptions.SanicException('User not found', status_code=404)
 
+
+async def get_user_transactions(user_id):
+    Tortoise.init_models(["__main__"], "models")
+    transactions = await Transaction.filter(
+        account__user__id=user_id).prefetch_related('account')
+    response = [
+        {'id': transaction.transaction_id,
+         'datetime': transaction.datetime.strftime("%d/%m/%Y, %H:%M:%S"),
+         'amount': transaction.amount,
+         'account': {'account_id': transaction.account.id,
+                     'balance': transaction.account.balance}}
+        for transaction in transactions
+    ]
+    return response
