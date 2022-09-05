@@ -55,7 +55,7 @@ Python 3.10, Sanic, Tortoise ORM, Sanic-jwt. DB: postgres.
 /items/ | V | V | - | - | - |
 /items/{item_id} | V | - | - | V | V |
 /items/{item_id}/buy | - | V | - | - | - |
-/webhook | - | V | - | - | - |
+/payments/webhook | - | V | - | - | - |
 
 
 ###  JSON-схемы 
