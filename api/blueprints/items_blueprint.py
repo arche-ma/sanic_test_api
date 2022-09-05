@@ -4,10 +4,11 @@ from sanic.response import HTTPResponse, json
 from sanic_ext import validate
 from sanic_jwt.decorators import scoped
 
-from ..cruds.crud import (create_item, delete_item_by_id, get_item_by_id,
-                          item_list, update_item)
 from models import Account, Item
-from ..utils import is_active
+
+from ..cruds.items_crud import (create_item, delete_item_by_id, get_item_by_id,
+                                item_list, update_item)
+from ..authentication_helpers import is_active
 from ..validators import AccountInputScheme, ItemPatchScheme, ItemScheme
 
 items = Blueprint('items', url_prefix='/items')
@@ -26,7 +27,7 @@ async def post_item_handler(request, body: ItemScheme):
 @items.get('/')
 @scoped('user')
 @is_active(add_user=False)
-async def get_items(request):
+async def get_items_handler(request):
     items = await item_list()
     response = items.json(indent=4)
     return HTTPResponse(f'{{"items": {response}}}', status=200,
@@ -36,7 +37,7 @@ async def get_items(request):
 @items.get('/<id:int>/')
 @scoped('user')
 @is_active(add_user=False)
-async def item_by_id(request, id: int):
+async def item_by_id_handler(request, id: int):
     item = await get_item_by_id(id)
     if item:
         response = item.json(indent=4)
@@ -58,7 +59,7 @@ async def delete_item_handler(request, id: int):
 async def update_handler(request, body, id: int):
     updated_item = await update_item(id, item=body)
     response = updated_item.json(indent=4)
-    return HTTPResponse(f'"{{item": {response}}}', status=200,
+    return HTTPResponse(f'{{"item": {response}}}', status=200,
                         content_type='application/json')
 
 
@@ -70,7 +71,7 @@ async def buy_item_handler(request, user, body: AccountInputScheme, id: int):
     account = await Account.get_or_none(pk=body.id, user__pk=user['user_id'])
     item = await Item.get_or_none(pk=id)
     if not item:
-        raise SanicException('item doesn\'t exist')
+        raise SanicException('item doesn\'t exist', status_code=404)
     if not account:
         raise SanicException('account number is incorrect',
                              status_code=400)

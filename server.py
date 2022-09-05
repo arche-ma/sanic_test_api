@@ -7,11 +7,10 @@ from sanic_jwt import Initialize
 from tortoise import run_async
 from tortoise.contrib.sanic import register_tortoise
 
+from api.authentication_helpers import authenticate, retrieve_user, scopes
 from api.blueprints.items_blueprint import items
 from api.blueprints.users_blueprint import users
-from api.blueprints.webhook import webhook
-from api.utils import authenticate, retrieve_user, scopes
-
+from api.blueprints.payments_blueprints import payments
 from populate_w_textdata import main
 
 logging.basicConfig(level=logging.DEBUG)
@@ -22,11 +21,12 @@ load_dotenv()
 app.config.SECRET = getenv('SECRET')
 app.blueprint(users)
 app.blueprint(items)
-app.blueprint(webhook)
+app.blueprint(payments)
 
 register_tortoise(
     app,
-    db_url=f'postgres://postgres:{getenv("DB_PASSWORD")}@{getenv("DB_HOST")}:5432/postgres',
+    db_url=f'postgres://postgres:{getenv("DB_PASSWORD")}'
+           f'@{getenv("DB_HOST")}:5432/postgres',
     modules={'models': ['models']},
     generate_schemas=True)
 

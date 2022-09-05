@@ -59,6 +59,4 @@ class Transaction(Model):
     amount = fields.DecimalField(max_digits=10,
                                  decimal_places=2)
     account = fields.ForeignKeyField('models.Account',
-                                     related_name='transactions' )
-
-    
+                                     related_name='transactions')

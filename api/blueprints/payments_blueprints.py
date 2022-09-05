@@ -4,23 +4,16 @@ from sanic_ext import validate
 from tortoise.transactions import atomic
 
 from models import Account, Transaction, User
+
 from ..validators import WebhookScheme
 
-webhook = Blueprint('webhook', url_prefix='/webhook')
+payments = Blueprint('payments', url_prefix='/payments')
 
 
-@webhook.post('/')
+@payments.post('/webhook')
 @validate(WebhookScheme)
 @atomic()
 async def webhook_handler(request, body):
-    """{
-	“signature”: “f4eae5b2881d8b6a1455f62502d08b2258d80084”,
-	“transaction_id”: 1234567,
-	“user_id”: 123456,
-	“bill_id”: 123456,
-	“amount”: 100
-}
-"""
     user = await User.get_or_none(pk=body.user_id).prefetch_related('accounts')
     if not user:
         raise SanicException('User doesn\'t exist',
@@ -32,7 +25,7 @@ async def webhook_handler(request, body):
     account = await Account.get_or_none(pk=body.bill_id)
     if not account:
         account = await Account.create(id=body.bill_id,
-                                        user=user,
+                                       user=user,
                                        balance=body.amount)
         await Transaction.create(amount=body.amount,
                                  account=account,
@@ -44,6 +37,6 @@ async def webhook_handler(request, body):
     account.balance += body.amount
     await account.save(update_fields=['balance'])
     await Transaction.create(amount=body.amount,
-                                 account=account,
-                                 transaction_id=body.transaction_id)
+                             account=account,
+                             transaction_id=body.transaction_id)
     return json('funds deposited')

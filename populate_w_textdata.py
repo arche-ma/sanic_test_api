@@ -1,11 +1,11 @@
 from os import getenv
-from dotenv import load_dotenv
+
 import aiofiles
+from dotenv import load_dotenv
 from tortoise import Tortoise, run_async
 
-from models import User, Item, Account
 from api.utils import get_hashed_password
-
+from models import Account, Item, User
 
 load_dotenv()
 
@@ -13,7 +13,8 @@ load_dotenv()
 async def init():
 
     await Tortoise.init(
-        db_url=f'postgres://postgres:{getenv("DB_PASSWORD")}@{getenv("DB_HOST")}:5432/postgres',
+        db_url='postgres://postgres:'
+               f'{getenv("DB_PASSWORD")}@{getenv("DB_HOST")}:5432/postgres',
         modules={'models': ['models']},
     )
     await Tortoise.generate_schemas()

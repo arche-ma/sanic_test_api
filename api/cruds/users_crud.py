@@ -1,54 +1,17 @@
-from sanic import exceptions, Sanic
+from sanic import Sanic, exceptions
 from tortoise import Tortoise
 from tortoise.contrib.pydantic import (pydantic_model_creator,
                                        pydantic_queryset_creator)
 
-from models import Account, Item, Transaction, User, UserActivation
-from ..utils import get_hashed_password
-from ..validators import ItemScheme, UserScheme
+from models import Account, Transaction, User, UserActivation
 
-ItemOutput = pydantic_model_creator(Item)
-ItemListOutput = pydantic_queryset_creator(Item)
+from ..utils import get_hashed_password
+from ..validators import UserScheme
+
 UserOutput = pydantic_model_creator(User)
 UserListOutput = pydantic_queryset_creator(User)
 AccountListOutput = pydantic_queryset_creator(Account)
 TransactionsList = pydantic_queryset_creator(Transaction)
-
-
-async def create_item(ItemScheme: ItemScheme):
-    new_item = await Item.create(
-        title=ItemScheme.title,
-        description=ItemScheme.description,
-        price=ItemScheme.price
-    )
-    return await ItemOutput.from_tortoise_orm(new_item)
-
-
-async def get_item_by_id(id: int):
-    item = await Item.get_or_none(pk=id)
-    if item:
-        return await ItemOutput.from_tortoise_orm(item)
-    return None
-
-
-async def item_list():
-    return await ItemListOutput.from_queryset(Item.all())
-
-
-async def delete_item_by_id(id: int):
-    await Item.get(pk=id).delete()
-
-
-async def update_item(id, item: ItemScheme):
-    updated_data = item.dict()
-    updated_data = {
-        key: value for (key, value) in updated_data.items()
-        if value is not None
-        }
-    if await Item.exists(pk=id):
-        await Item.filter(pk=id).update(**updated_data)
-        return await ItemOutput.from_tortoise_orm(await Item.get(pk=id))
-    raise exceptions.SanicException('item doesn\'t exist', status_code=404)
 
 
 async def create_user(user: UserScheme):

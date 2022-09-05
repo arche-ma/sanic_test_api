@@ -3,10 +3,10 @@ from sanic.response import HTTPResponse, json
 from sanic_ext import validate
 from sanic_jwt.decorators import scoped
 
-from ..cruds.crud import (create_user, get_user_by_id, get_user_by_uuid,
-                        get_user_transactions, get_users_account,
-                        set_user_state, users_list)
-from ..utils import is_active
+from ..cruds.users_crud import (create_user, get_user_by_id, get_user_by_uuid,
+                                get_user_transactions, get_users_account,
+                                set_user_state, users_list)
+from ..authentication_helpers import is_active
 from ..validators import UserScheme
 
 users = Blueprint('users', url_prefix='/users')
