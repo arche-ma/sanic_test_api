@@ -17,7 +17,7 @@ async def init():
                f'{getenv("DB_PASSWORD")}@{getenv("DB_HOST")}:5432/postgres',
         modules={'models': ['models']},
     )
-    await Tortoise.generate_schemas()
+    await Tortoise.generate_schemas(safe=True)
 
 
 async def generate_users(filename):
