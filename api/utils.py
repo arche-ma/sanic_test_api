@@ -3,7 +3,7 @@ import hashlib
 from Crypto.Hash import SHA1
 
 
-def get_hashed_password(password: str, secret: None) -> str:
+def get_hashed_password(password: str, secret='') -> str:
     salt_password = password + secret
     hashed_password = hashlib.md5(salt_password.encode())
     return hashed_password.hexdigest()
