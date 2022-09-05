@@ -60,7 +60,7 @@ Python 3.10, Sanic, Tortoise ORM, Sanic-jwt. DB: postgres.
 
 ###  JSON-схемы 
 
-<b> POST user/register </b>
+<b> POST users/register </b>
 
 ```
 {
@@ -69,7 +69,7 @@ Python 3.10, Sanic, Tortoise ORM, Sanic-jwt. DB: postgres.
 }
 ```
 
-<b> POST /user/register </b>
+<b> POST /items </b>
 
 ```
 {
@@ -109,7 +109,7 @@ Python 3.10, Sanic, Tortoise ORM, Sanic-jwt. DB: postgres.
 
 }
 ```
-Сигнатура формируются по правилу:
+Сигнатура формируется по правилу:
 ```
 from Crypto.Hash import SHA1
  
