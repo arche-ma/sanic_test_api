@@ -1,4 +1,5 @@
 from os import getenv
+import asyncio
 
 import aiofiles
 from dotenv import load_dotenv
@@ -63,8 +64,10 @@ async def generate_accounts(user: User):
 async def main():
     await init()
     if not await User.first():
-        await generate_users('users.csv')
-        await generate_items('items.csv')
+        await asyncio.gather(generate_users('users.csv'),
+                             generate_items('items.csv'))
+    else:
+        print('db already populated')
 
 
 if __name__ == '__main__':

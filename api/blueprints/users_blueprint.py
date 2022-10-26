@@ -15,8 +15,7 @@ users = Blueprint('users', url_prefix='/users')
 @users.post('/activate/<uuid:uuid>')
 async def activation_link_handler(request, uuid):
     user = await get_user_by_uuid(uuid)
-    user.is_active = True
-    await user.save()
+    await (set_user_state(user, True))
     return json('user was activated')
 
 
