@@ -14,11 +14,11 @@ from api.blueprints.payments_blueprints import payments
 from populate_w_textdata import main
 
 logging.basicConfig(level=logging.DEBUG)
-app = Sanic('helloWorld')
+app = Sanic("helloWorld")
 load_dotenv()
 
 
-app.config.SECRET = getenv('SECRET')
+app.config.SECRET = getenv("SECRET")
 app.blueprint(users)
 app.blueprint(items)
 app.blueprint(payments)
@@ -26,16 +26,20 @@ app.blueprint(payments)
 register_tortoise(
     app,
     db_url=f'postgres://postgres:{getenv("DB_PASSWORD")}'
-           f'@{getenv("DB_HOST")}:5432/postgres',
-    modules={'models': ['models']},
-    generate_schemas=True)
+    f'@{getenv("DB_HOST")}:5432/postgres',
+    modules={"models": ["models"]},
+    generate_schemas=True,
+)
 
 
-Initialize(app, authenticate=authenticate,
-           retrieve_user=retrieve_user,
-           add_scopes_to_payload=scopes)
+Initialize(
+    app,
+    authenticate=authenticate,
+    retrieve_user=retrieve_user,
+    add_scopes_to_payload=scopes,
+)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run_async(main())
-    app.run(host='0.0.0.0', port=8000, dev=True)
+    app.run(host="0.0.0.0", port=8000, dev=True)
