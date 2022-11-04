@@ -20,7 +20,7 @@ class Config:
         return (
             f"postgres://{self.POSTGRES_USER}:"
             f"{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:"
-            "{self.DB_PORT}/{self.POSTGRES_DB}"
+            f"{self.DB_PORT}/{self.POSTGRES_DB}"
         )
 
 
