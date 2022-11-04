@@ -3,6 +3,7 @@ from decimal import Decimal
 from typing import Optional
 
 from pydantic import BaseModel, root_validator, validator
+from pydantic import constr, condecimal
 from sanic import Sanic
 from sanic.exceptions import SanicException
 
@@ -10,19 +11,8 @@ from .utils import produce_signature
 
 
 class UserScheme(BaseModel):
-    username: str
-    password: str
-
-    @validator('password')
-    def password_validation(cls, password):
-        pattern = r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$'
-
-        if not re.match(pattern, password):
-            raise SanicException(
-                {'password': 'Password must be at least eight character '
-                 'and contain at least one letter and one number'},
-                status_code=400)
-        return password
+    username: constr(min_length=3)
+    password: constr(regex=r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$")
 
 
 class AccountInputScheme(BaseModel):
@@ -30,29 +20,15 @@ class AccountInputScheme(BaseModel):
 
 
 class ItemScheme(BaseModel):
-    title: str
-    description: str
-    price: Decimal
-
-    @validator('title')
-    def title_validation(cls, title):
-        if title == '':
-            raise SanicException({'title': 'title may not be blank'},
-                                 status_code=400)
-        return title
-
-    @validator('price')
-    def price_validation(cls, price):
-        if price <= 0:
-            raise SanicException({'price': 'price should be bigger than 0'},
-                                 status_code=400)
-        return price
+    title: constr(min_length=3, max_length=20)
+    description: constr(min_length=3, max_length=200)
+    price: condecimal(gt=0)
 
 
-class ItemPatchScheme(ItemScheme):
-    title: Optional[str]
-    description: Optional[str]
-    price: Optional[Decimal]
+class ItemPatchScheme(BaseModel):
+    title: Optional[constr(min_length=3, max_length=20)]
+    description: Optional[constr(min_length=3, max_length=200)]
+    price: Optional[condecimal(gt=0)]
 
 
 class WebhookScheme(BaseModel):
@@ -60,25 +36,20 @@ class WebhookScheme(BaseModel):
     transaction_id: int
     user_id: int
     bill_id: int
-    amount: Decimal
+    amount: condecimal(gt=0)
 
     @classmethod
     def computed_signature(cls, transaction_id, user_id, bill_id, amount):
-        app = Sanic.get_app('helloWorld')
+        app = Sanic.get_app("helloWorld")
         secret = app.config.SECRET
-        signature = produce_signature(secret,
-                                      transaction_id,
-                                      user_id,
-                                      bill_id,
-                                      amount)
+        signature = produce_signature(secret, transaction_id, user_id, bill_id, amount)
         return signature
 
     @root_validator
     def validate_signature(cls, values):
         validation_data = {
-            key: value for (key, value) in values.items() if key != 'signature'
+            key: value for (key, value) in values.items() if key != "signature"
         }
-        if values['signature'] != (sign := cls.computed_signature(
-                                   **validation_data)):
+        if values["signature"] != (sign := cls.computed_signature(**validation_data)):
             raise SanicException(f"signature is false: {sign}, {values}", 400)
         return values
