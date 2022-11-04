@@ -3,17 +3,18 @@ from sanic.response import HTTPResponse, json
 from sanic_ext import validate
 from sanic_jwt.decorators import scoped
 from tortoise.transactions import atomic
+
+from ..authentication_helpers import is_active
 from ..cruds.users_crud import (
     create_user,
+    delete_activation_link,
     get_user_by_id,
     get_user_by_uuid,
     get_user_transactions,
     get_users_account,
     set_user_state,
     users_list,
-    delete_activation_link,
 )
-from ..authentication_helpers import is_active
 from ..validators import UserScheme
 
 users = Blueprint("users", url_prefix="/users")
@@ -97,7 +98,9 @@ async def account_by_id_handler(request, user_id):
     accounts = await get_users_account(user_id=user_id)
     response = accounts.json(indent=4)
     return HTTPResponse(
-        f'{{"accounts": {response}}}', status=200, content_type="application/json"
+        f'{{"accounts": {response}}}',
+        status=200,
+        content_type="application/json",
     )
 
 

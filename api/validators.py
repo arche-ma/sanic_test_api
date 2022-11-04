@@ -2,8 +2,7 @@ import re
 from decimal import Decimal
 from typing import Optional
 
-from pydantic import BaseModel, root_validator, validator
-from pydantic import constr, condecimal
+from pydantic import BaseModel, condecimal, constr, root_validator, validator
 from sanic import Sanic
 from sanic.exceptions import SanicException
 
@@ -42,7 +41,9 @@ class WebhookScheme(BaseModel):
     def computed_signature(cls, transaction_id, user_id, bill_id, amount):
         app = Sanic.get_app("helloWorld")
         secret = app.config.SECRET
-        signature = produce_signature(secret, transaction_id, user_id, bill_id, amount)
+        signature = produce_signature(
+            secret, transaction_id, user_id, bill_id, amount
+        )
         return signature
 
     @root_validator
@@ -50,6 +51,8 @@ class WebhookScheme(BaseModel):
         validation_data = {
             key: value for (key, value) in values.items() if key != "signature"
         }
-        if values["signature"] != (sign := cls.computed_signature(**validation_data)):
+        if values["signature"] != (
+            sign := cls.computed_signature(**validation_data)
+        ):
             raise SanicException(f"signature is false: {sign}, {values}", 400)
         return values

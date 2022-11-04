@@ -5,8 +5,8 @@ from tortoise import Model, fields
 
 
 class Role(str, Enum):
-    USER = 'USER'
-    ADMIN = 'ADMIN'
+    USER = "USER"
+    ADMIN = "ADMIN"
 
 
 class User(Model):
@@ -21,14 +21,16 @@ class User(Model):
         return self.role == Role.ADMIN
 
     class PydanticMeta:
-        exclude = ['password']
+        exclude = ["password"]
 
 
 class UserActivation(Model):
     id = fields.IntField(pk=True)
-    user = fields.ForeignKeyField('models.User',
-                                  related_name='activation_links',
-                                  on_delete=fields.CASCADE)
+    user = fields.ForeignKeyField(
+        "models.User",
+        related_name="activation_links",
+        on_delete=fields.CASCADE,
+    )
     uuid_link = fields.UUIDField(default=uuid4)
 
 
@@ -36,27 +38,25 @@ class Item(Model):
     id = fields.IntField(pk=True)
     title = fields.CharField(max_length=255)
     description = fields.TextField()
-    price = fields.DecimalField(max_digits=10,
-                                decimal_places=2)
+    price = fields.DecimalField(max_digits=10, decimal_places=2)
 
 
 class Account(Model):
     id = fields.IntField(pk=True, generated=False)
-    balance = fields.DecimalField(max_digits=10,
-                                  decimal_places=2)
-    user = fields.ForeignKeyField('models.User',
-                                  related_name='accounts',
-                                  on_delete=fields.CASCADE)
+    balance = fields.DecimalField(max_digits=10, decimal_places=2)
+    user = fields.ForeignKeyField(
+        "models.User", related_name="accounts", on_delete=fields.CASCADE
+    )
 
     class PydanticMeta:
-        exclude = ['user']
+        exclude = ["user"]
 
 
 class Transaction(Model):
     id = fields.IntField(pk=True)
-    transaction_id = fields.IntField()
+    transaction_id = fields.IntField(unique=True)
     datetime = fields.DatetimeField(auto_now=True)
-    amount = fields.DecimalField(max_digits=10,
-                                 decimal_places=2)
-    account = fields.ForeignKeyField('models.Account',
-                                     related_name='transactions')
+    amount = fields.DecimalField(max_digits=10, decimal_places=2)
+    account = fields.ForeignKeyField(
+        "models.Account", related_name="transactions"
+    )

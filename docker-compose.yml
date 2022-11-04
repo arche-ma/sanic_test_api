@@ -11,6 +11,5 @@ services:
       - postgresql
   postgresql:
     image: postgres:14.5-alpine
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=secret_password
+    env_file:
+      - .env

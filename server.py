@@ -1,7 +1,5 @@
 import logging
-from os import getenv
 
-from dotenv import load_dotenv
 from sanic import Sanic
 from sanic_jwt import Initialize
 from tortoise import run_async
@@ -9,24 +7,23 @@ from tortoise.contrib.sanic import register_tortoise
 
 from api.authentication_helpers import authenticate, retrieve_user, scopes
 from api.blueprints.items_blueprint import items
-from api.blueprints.users_blueprint import users
 from api.blueprints.payments_blueprints import payments
+from api.blueprints.users_blueprint import users
+from config import config
 from populate_w_textdata import main
 
 logging.basicConfig(level=logging.DEBUG)
 app = Sanic("helloWorld")
-load_dotenv()
 
 
-app.config.SECRET = getenv("SECRET")
+app.update_config(config)
 app.blueprint(users)
 app.blueprint(items)
 app.blueprint(payments)
 
 register_tortoise(
     app,
-    db_url=f'postgres://postgres:{getenv("DB_PASSWORD")}'
-    f'@{getenv("DB_HOST")}:5432/postgres',
+    db_url=config.db_url,
     modules={"models": ["models"]},
     generate_schemas=True,
 )
@@ -42,4 +39,4 @@ Initialize(
 
 if __name__ == "__main__":
     run_async(main())
-    app.run(host="0.0.0.0", port=8000, dev=True)
+    app.run(host=app.config.HOST, port=app.config.PORT, dev=True)

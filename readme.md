@@ -112,7 +112,7 @@ Python 3.10, Sanic, Tortoise ORM, Sanic-jwt. DB: postgres.
 Сигнатура формируется по правилу:
 ```
 from Crypto.Hash import SHA1
- 
+
 signature = SHA1.new()\
 .update(f'{private_key}:{transaction_id}:{user_id}:{bill_id}:{amount}'.encode())\
 .hexdigest()
